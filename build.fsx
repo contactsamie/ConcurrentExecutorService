@@ -145,3 +145,4 @@ Target "RemotePublishNuGet" (fun _ ->
 
 // start build
 RunTargetOrDefault "RemotePublishNuGet"
+//RunTargetOrDefault "Test"
