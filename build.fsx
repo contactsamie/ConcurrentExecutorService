@@ -122,11 +122,11 @@ Target "CreateNuget" (fun _ ->
             "ConcurrentExecutorServiceLib.nuspec"
 )
 
-//Target "Deploy" (fun _ ->
-//    !! (buildDir + "/**/*.*") 
-//        -- "*.zip" 
-//        |> Zip buildDir (deployDir + "ConcurrentExecutorService." + version + ".zip")
-//)
+Target "Deploy" (fun _ ->
+    !! (buildDir + "/**/*.*") 
+        -- "*.zip" 
+        |> Zip buildDir (deployDir + "ConcurrentExecutorService." + version + ".zip")
+)
 
 
 
@@ -140,7 +140,7 @@ Target "RemotePublishNuGet" (fun _ ->
 "Clean"
   ==> "Build"
   ==> "Test"
-  //==> "Deploy"
+  ==> "Deploy"
   ==> "CreateNuget"
   ==> "RemotePublishNuGet"
 
