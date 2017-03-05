@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using ConcurrentExecutorService.Messages;
 
@@ -9,20 +6,21 @@ namespace ConcurrentExecutorService.Common
 {
     public class WorkFactory : IWorkFactory
     {
-        private Func<object> Operation { set; get; }
-        private Func<Task<object>> OperationAsync { set; get; }
         public WorkFactory(Func<Task<object>> operation)
         {
             OperationAsync = operation;
             RunAsyncMethod = true;
         }
-        public WorkFactory(Func<object> operation )
-        {
-            Operation = operation;
-        }
+
+        private Func<object> Operation { set; get; }
+        private Func<Task<object>> OperationAsync { get; }
+        //public WorkFactory(Func<object> operation )
+        //{
+        //    Operation = operation;
+        //}
         public object Execute()
         {
-          return  Operation();
+            return Operation();
         }
 
         public Task<object> ExecuteAsync()
@@ -30,6 +28,6 @@ namespace ConcurrentExecutorService.Common
             return OperationAsync();
         }
 
-         public bool RunAsyncMethod { get; set; }
+        public bool RunAsyncMethod { get; set; }
     }
 }

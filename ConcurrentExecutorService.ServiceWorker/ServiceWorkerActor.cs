@@ -1,6 +1,7 @@
-﻿using Akka.Actor;
+﻿using System;
+using System.Threading.Tasks;
+using Akka.Actor;
 using ConcurrentExecutorService.Messages;
-using System;
 
 namespace ConcurrentExecutorService.ServiceWorker
 {
@@ -8,28 +9,40 @@ namespace ConcurrentExecutorService.ServiceWorker
     {
         public ServiceWorkerActor()
         {
-            ReceiveAsync<SetWorkMessage>(async message =>
+            Receive<SetWorkMessage>(message =>
             {
+                var senderClosure = Sender;
                 IConcurrentExecutorResponseMessage resultMessage;
                 try
                 {
                     var workFactory = message.WorkFactory;
-                    object result;
                     if (workFactory.RunAsyncMethod)
                     {
-                        result = await workFactory.ExecuteAsync();
+                        workFactory.ExecuteAsync()
+                            .ContinueWith(r =>
+                            {
+                                if (r.IsFaulted)
+                                {
+                                    resultMessage = new SetWorkErrorMessage("Unable to complete operation", message.Id);
+                                }
+                                else
+                                {
+                                    resultMessage = new SetWorkCompletedMessage(r.Result, message.Id);
+                                }
+                                return resultMessage;
+                            },
+                                TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously)
+                            .PipeTo(senderClosure);
                     }
                     else
                     {
-                        result = workFactory.Execute();
+                        workFactory.Execute();
                     }
-                    resultMessage = new SetWorkCompletedMessage(result, message.Id);
-                    Sender.Tell(resultMessage);
                 }
                 catch (Exception e)
                 {
                     resultMessage = new SetWorkErrorMessage(e.Message + " " + e.InnerException?.Message, message.Id);
-                    Sender.Tell(resultMessage);
+                    senderClosure.Tell(resultMessage);
                     Context.Parent.Tell(resultMessage);
                 }
             });

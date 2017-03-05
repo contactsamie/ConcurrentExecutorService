@@ -1,37 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ConcurrentExecutorService.Messages
 {
     public interface IWorkFactory
     {
+        bool RunAsyncMethod { set; get; }
         object Execute();
         Task<object> ExecuteAsync();
-        bool RunAsyncMethod { set; get; }
     }
-    public class SetWorkMessage: IConcurrentExecutorRequestMessage
+
+    public class SetWorkMessage : IConcurrentExecutorRequestMessage
     {
         public SetWorkMessage(string id, IWorkFactory workFactory)
         {
             Id = id;
             WorkFactory = workFactory;
-            
         }
 
         public string Id { get; private set; }
         public IWorkFactory WorkFactory { private set; get; }
-       
-        
     }
+
     public class WorkerStatus
     {
         public DateTime CreatedDateTime { get; set; }
         public DateTime CompletedDateTime { get; set; }
         public bool IsCompleted { get; set; }
     }
+
     public class SetWorkCompletedMessage : IConcurrentExecutorResponseMessage
     {
         public SetWorkCompletedMessage(object result, string id)
@@ -43,6 +40,7 @@ namespace ConcurrentExecutorService.Messages
         public object Result { get; private set; }
         public string Id { get; private set; }
     }
+
     public class SetWorkErrorMessage : IConcurrentExecutorResponseMessage
     {
         public SetWorkErrorMessage(string error, string workerId)
@@ -54,9 +52,11 @@ namespace ConcurrentExecutorService.Messages
         public string Error { get; private set; }
         public string WorkerId { get; private set; }
     }
+
     public interface IConcurrentExecutorRequestMessage
     {
     }
+
     public interface IConcurrentExecutorResponseMessage
     {
     }

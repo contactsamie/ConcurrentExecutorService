@@ -1,30 +1,34 @@
-﻿using Akka.Util.Internal;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Akka.Util.Internal;
+using ConcurrentExecutorService.Messages;
 using Xunit;
 
 namespace ConcurrentExecutorService.Tests
 {
     public class TestHelper
     {
-        public static long TestOperationExecution(int numberOfBaskets, int numberOfPurchaseFromOneBasketCount, TimeSpan maxExecutionTimePerAskCall)
+        public static long TestOperationExecution(int numberOfBaskets, int numberOfPurchaseFromOneBasketCount,
+            TimeSpan maxExecutionTimePerAskCall)
         {
             //Arrange
             var baskets = new ConcurrentDictionary<string, bool>();
             var orders = new ConcurrentDictionary<string, string>();
 
             //Act - obtain expected result
-            var basketIds = CreateBaskets(numberOfBaskets, numberOfPurchaseFromOneBasketCount, baskets);
-            var purchaseService = new DelayedPurchaseServiceFactory(baskets, orders);
-            basketIds.ForEach(basket =>
-            {
-                var result = purchaseService.RunPurchaseService(basket).Result;
-            });
+            for (var i = 0; i < numberOfBaskets; i++)
+                baskets[Guid.NewGuid().ToString()] = true;
 
-            var expected = GetOperationsResults(baskets);
+            var basketIds = ObtainBasketIds(baskets, numberOfPurchaseFromOneBasketCount);
+
+            var purchaseService = new DelayedPurchaseServiceFactory(baskets, orders);
+            basketIds.ForEach(basket => { var result = purchaseService.RunPurchaseService(basket).Result; });
+
+            //var expected = baskets.Select(b => b.Key);
             Assert.All(baskets, b => Assert.Equal(1, orders.Count(o => o.Value == b.Key)));
 
             //undo
@@ -33,49 +37,38 @@ namespace ConcurrentExecutorService.Tests
 
             var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService(maxExecutionTimePerAskCall);
 
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-             purchaseService = new DelayedPurchaseServiceFactory(baskets, orders);
-            Parallel.ForEach(basketIds, (basketId) =>
+            purchaseService = new DelayedPurchaseServiceFactory(baskets, orders);
+            var watch = Stopwatch.StartNew();
+
+            var results = new List<object>();
+            Parallel.ForEach(basketIds, basketId =>
             {
-                var result = service.GoAsync(async () =>
-                {
-                    await purchaseService.RunPurchaseService(basketId);
-                }, basketId).Result;
+                var result =
+                    service.GoAsync<IConcurrentExecutorResponseMessage>(
+                        () => { return purchaseService.RunPurchaseService(basketId); }, basketId).Result;
+                results.Add(result);
             });
+
+
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
 
-            var actual = GetOperationsResults(baskets);
+
             Assert.All(baskets, b => Assert.Equal(1, orders.Count(o => o.Value == b.Key)));
 
-            //Assert
-            Assert.Equal(expected, actual);
 
             return elapsedMs;
         }
 
-        private static List<string> GetOperationsResults(ConcurrentDictionary<string, bool> baskets)
-        {
-            var expected = new List<string>();
-            baskets.ForEach(b => { expected.Add(b.Key); });
-            return expected;
-        }
 
-        private static List<string> ObtainBasketIds(ConcurrentDictionary<string, bool> baskets, int numberOfPurchaseFromOneBasketCount)
+        private static List<string> ObtainBasketIds(ConcurrentDictionary<string, bool> baskets,
+            int numberOfPurchaseFromOneBasketCount)
         {
             var basketIds = new List<string>();
             foreach (var keyValuePair in baskets)
                 for (var i = 0; i < numberOfPurchaseFromOneBasketCount; i++)
                     basketIds.Add(keyValuePair.Key);
             return basketIds;
-        }
-
-        private static List<string> CreateBaskets(int numberOfBaskets, int numberOfPurchaseFromOneBasketCount, ConcurrentDictionary<string, bool> baskets)
-        {
-            for (var i = 0; i < numberOfBaskets; i++)
-                baskets[Guid.NewGuid().ToString()] = true;
-
-            return ObtainBasketIds(baskets, numberOfPurchaseFromOneBasketCount);
         }
     }
 
@@ -86,14 +79,15 @@ namespace ConcurrentExecutorService.Tests
 
     public class DelayedPurchaseServiceFactory : IPurchaseServiceFactory
     {
-        private ConcurrentDictionary<string, bool> Baskets { set; get; }
-        private ConcurrentDictionary<string, string> Orders { set; get; }
-
-        public DelayedPurchaseServiceFactory(ConcurrentDictionary<string, bool> baskets, ConcurrentDictionary<string, string> orders)
+        public DelayedPurchaseServiceFactory(ConcurrentDictionary<string, bool> baskets,
+            ConcurrentDictionary<string, string> orders)
         {
             Orders = orders;
             Baskets = baskets;
         }
+
+        private ConcurrentDictionary<string, bool> Baskets { get; }
+        private ConcurrentDictionary<string, string> Orders { get; }
 
         public async Task<object> RunPurchaseService(string o)
         {
@@ -112,14 +106,15 @@ namespace ConcurrentExecutorService.Tests
 
     public class NoDelayPurchaseServiceFactory : IPurchaseServiceFactory
     {
-        private ConcurrentDictionary<string, bool> Baskets { set; get; }
-        private ConcurrentDictionary<string, string> Orders { set; get; }
-
-        public NoDelayPurchaseServiceFactory(ConcurrentDictionary<string, bool> baskets, ConcurrentDictionary<string, string> orders)
+        public NoDelayPurchaseServiceFactory(ConcurrentDictionary<string, bool> baskets,
+            ConcurrentDictionary<string, string> orders)
         {
             Orders = orders;
             Baskets = baskets;
         }
+
+        private ConcurrentDictionary<string, bool> Baskets { get; }
+        private ConcurrentDictionary<string, string> Orders { get; }
 
         public async Task<object> RunPurchaseService(string o)
         {

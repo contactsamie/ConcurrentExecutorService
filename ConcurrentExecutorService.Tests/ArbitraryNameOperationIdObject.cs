@@ -9,8 +9,7 @@ namespace ConcurrentExecutorService.Tests
         {
             var genInventories = from name in Arb.Generate<Guid>()
                 from operationId in Arb.Generate<uint>()
-                                
-                select new NameOperationIdObject(name.ToString(),operationId);
+                select new NameOperationIdObject(name.ToString(), operationId);
             return genInventories.ToArbitrary();
         }
     }
