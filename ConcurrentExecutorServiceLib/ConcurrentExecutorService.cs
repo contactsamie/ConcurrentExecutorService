@@ -10,8 +10,7 @@ namespace ConcurrentExecutorServiceLib
 {
     public class ConcurrentExecutorService
     {
-        public ConcurrentExecutorService(TimeSpan maxExecutionTimePerAskCall, string serverActorSystemName = null,
-            ActorSystem actorSystem = null, string actorSystemConfig = null)
+        public ConcurrentExecutorService(TimeSpan? maxExecutionTimePerAskCall=null, string serverActorSystemName = null,ActorSystem actorSystem = null, string actorSystemConfig = null)
         {
             ActorSystemCreator = new ActorSystemCreator();
 
@@ -22,7 +21,7 @@ namespace ConcurrentExecutorServiceLib
 
             ActorSystemCreator.CreateOrSetUpActorSystem(serverActorSystemName, actorSystem, actorSystemConfig);
             ReceptionActorRef = ActorSystemCreator.ServiceActorSystem.ActorOf(Props.Create(() => new ReceptionActor()));
-            MaxExecutionTimePerAskCall = maxExecutionTimePerAskCall;
+            MaxExecutionTimePerAskCall = maxExecutionTimePerAskCall?? TimeSpan.FromSeconds(5);
         }
 
         private ActorSystemCreator ActorSystemCreator { get; }
@@ -30,21 +29,21 @@ namespace ConcurrentExecutorServiceLib
 
         private IActorRef ReceptionActorRef { get; }
 
-        public async Task ExecuteAsync(Action operation, string id) 
+        public async Task ExecuteAsync(Action operation, string id, TimeSpan? maxExecutionTimePerAskCall = null) 
         {
              await ExecuteAsync<object>(async () => {
                 operation();
                 return await Task.FromResult(new object());
-            }, id);
+            }, id, maxExecutionTimePerAskCall);
         }
 
-        public async Task<TResult> ExecuteAsync<TResult>(Func<TResult> operation, string id) where TResult : class
+        public async Task<TResult> ExecuteAsync<TResult>(Func<TResult> operation, string id, TimeSpan? maxExecutionTimePerAskCall=null) where TResult : class
         {
-           return await ExecuteAsync<TResult>(async() => await Task.FromResult(operation()), id);
+           return await ExecuteAsync<TResult>(async() => await Task.FromResult(operation()), id, maxExecutionTimePerAskCall);
         }
-        public async Task<TResult> ExecuteAsync<TResult>(Func<Task<object>> operation, string id) where TResult : class
+        public async Task<TResult> ExecuteAsync<TResult>(Func<Task<object>> operation, string id,TimeSpan? maxExecutionTimePerAskCall=null) where TResult : class
         {
-            var result = await ReceptionActorRef.Ask<IConcurrentExecutorResponseMessage>(new SetWorkMessage(id, new WorkFactory(operation)), MaxExecutionTimePerAskCall) .ConfigureAwait(false);
+            var result = await ReceptionActorRef.Ask<IConcurrentExecutorResponseMessage>(new SetWorkMessage(id, new WorkFactory(operation)), maxExecutionTimePerAskCall?? MaxExecutionTimePerAskCall) .ConfigureAwait(false);
 
             return (result as SetWorkCompletedMessage)?.Result as TResult;
         }

@@ -15,4 +15,4 @@ nuget xunit.runner.console
 nuget FsCheck 2.6.2
 nuget FsCheck.Xunit
 nuget FSharp.Core 4.0.1.7-alpha framework: >= net452
-nuget ConcurrentExecutorService
+nuget ConcurrentExecutorService 0.0.92

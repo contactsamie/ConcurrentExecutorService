@@ -31,7 +31,7 @@ namespace ConcurrentExecutorService.Reception
                 }
             });
             Receive<SetWorkErrorMessage>(message => { RemoveWorkerFromDictionary(message.WorkerId); });
-            Receive<SetWorkCompletedMessage>(message => { RemoveWorkerFromDictionary(message.Id); });
+
         }
 
         private Dictionary<string, WorkerStatus> ServiceWorkerStore { get; }

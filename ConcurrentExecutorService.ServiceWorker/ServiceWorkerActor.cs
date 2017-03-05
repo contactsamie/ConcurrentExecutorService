@@ -24,6 +24,7 @@ namespace ConcurrentExecutorService.ServiceWorker
                                 if (r.IsFaulted)
                                 {
                                     resultMessage = new SetWorkErrorMessage("Unable to complete operation", message.Id);
+                                    Context.Parent.Tell(resultMessage);//todo investigate potential double tell. I dont know if its faulted ends up throwing which in catch will send to parent again
                                 }
                                 else
                                 {

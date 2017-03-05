@@ -2,5 +2,5 @@
 cls
 .paket\paket.bootstrapper.exe
 .paket\paket install
-packages\FAKE\tools\Fake.exe build.fsx buildType=%1 nugetDeployPath=%2
+packages\FAKE\tools\Fake.exe build.fsx
 pause
