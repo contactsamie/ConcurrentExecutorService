@@ -72,6 +72,11 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.2'">
       <ItemGroup>
+        <Reference Include="ConcurrentExecutorService.ActorSystemFactory">
+          <HintPath>..\packages\ConcurrentExecutorService\lib\net45\ConcurrentExecutorService.ActorSystemFactory.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
         <Reference Include="ConcurrentExecutorService.Common">
           <HintPath>..\packages\ConcurrentExecutorService\lib\net45\ConcurrentExecutorService.Common.dll</HintPath>
           <Private>True</Private>
