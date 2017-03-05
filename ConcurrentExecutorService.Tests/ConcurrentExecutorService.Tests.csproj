@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="ArbitraryNameOperationIdObject.cs" />
     <Compile Include="NameOperationIdObject.cs" />
+    <Compile Include="TestHelper.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
