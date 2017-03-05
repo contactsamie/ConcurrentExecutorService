@@ -15,7 +15,7 @@ open Fake.Testing
 
 let buildParam = getBuildParamOrDefault  "buildType" "release" 
 // Directories
-let root="./.build/build-"+buildParam+"-service"
+let root="./.build/build-"+buildParam
 let buildDir  = root+"/app/"
 let testDir   =root+ "/test"
 let deployDir = root+"/deploy/"
@@ -26,6 +26,7 @@ let allPackageFiles = [
                         (buildDir+"ConcurrentExecutorService.Messages.dll");
                         (buildDir+"ConcurrentExecutorService.Reception.dll");
                         (buildDir+"ConcurrentExecutorService.ServiceWorker.dll");
+                        (buildDir+"ConcurrentExecutorService.ActorSystemFactory.dll");
                         (buildDir+"readme.txt")
                     ]
 
@@ -66,7 +67,7 @@ let NugetDeployPath= match nugetDeployPath with
 let version =
   match buildServer with
   | TeamCity -> (buildVersion+BuildVersionType)
-  | _        -> ("0.0.1"+BuildVersionType)
+  | _        -> ("0.0.3"+BuildVersionType)
 
 // Targets
 Target "Clean" (fun _ -> 
@@ -121,11 +122,11 @@ Target "CreateNuget" (fun _ ->
             "ConcurrentExecutorServiceLib.nuspec"
 )
 
-Target "Deploy" (fun _ ->
-    !! (buildDir + "/**/*.*") 
-        -- "*.zip" 
-        |> Zip buildDir (deployDir + "ConcurrentExecutorService." + version + ".zip")
-)
+//Target "Deploy" (fun _ ->
+//    !! (buildDir + "/**/*.*") 
+//        -- "*.zip" 
+//        |> Zip buildDir (deployDir + "ConcurrentExecutorService." + version + ".zip")
+//)
 
 
 
@@ -139,7 +140,7 @@ Target "RemotePublishNuGet" (fun _ ->
 "Clean"
   ==> "Build"
   ==> "Test"
-  ==> "Deploy"
+  //==> "Deploy"
   ==> "CreateNuget"
   ==> "RemotePublishNuGet"
 

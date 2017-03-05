@@ -72,6 +72,37 @@
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.2'">
       <ItemGroup>
+        <Reference Include="ConcurrentExecutorService.Common">
+          <HintPath>..\packages\ConcurrentExecutorService\lib\net45\ConcurrentExecutorService.Common.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="ConcurrentExecutorService.Messages">
+          <HintPath>..\packages\ConcurrentExecutorService\lib\net45\ConcurrentExecutorService.Messages.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="ConcurrentExecutorService.Reception">
+          <HintPath>..\packages\ConcurrentExecutorService\lib\net45\ConcurrentExecutorService.Reception.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="ConcurrentExecutorService.ServiceWorker">
+          <HintPath>..\packages\ConcurrentExecutorService\lib\net45\ConcurrentExecutorService.ServiceWorker.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+        <Reference Include="ConcurrentExecutorServiceLib">
+          <HintPath>..\packages\ConcurrentExecutorService\lib\net45\ConcurrentExecutorServiceLib.dll</HintPath>
+          <Private>True</Private>
+          <Paket>True</Paket>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And $(TargetFrameworkVersion) == 'v4.5.2'">
+      <ItemGroup>
         <Reference Include="Newtonsoft.Json">
           <HintPath>..\packages\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
           <Private>True</Private>
