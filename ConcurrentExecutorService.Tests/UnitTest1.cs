@@ -29,26 +29,21 @@ namespace ConcurrentExecutorService.Tests
             var orders = new ConcurrentDictionary<string, string>();
 
             const int numberOfBaskets = 10;
-            const int numberOfPurchaseFromOneBasketCount = 10;
+            const int numberOfPurchaseFromOneBasketCount = 1;
             var buyOperation = GetPurchaseService(baskets, orders);
-
-
 
             //Act - obtain expected result
             var basketIds =   CreateBaskets(numberOfBaskets, numberOfPurchaseFromOneBasketCount, baskets);
             PurchaseSequencially(basketIds, numberOfPurchaseFromOneBasketCount, buyOperation);
             var expected = CheckAndGetResults(orders, baskets);
 
-
             //undo
             ResetStorages(baskets, orders);
-
 
             //Act - tryout parallel purchase
             basketIds = CreateBaskets(numberOfBaskets, numberOfPurchaseFromOneBasketCount, baskets);
             PurchaseInParallel(basketIds, buyOperation);
             var actual = CheckAndGetResults(orders, baskets);
-
 
             //Assert
             Assert.Equal(expected, actual);
@@ -65,7 +60,7 @@ namespace ConcurrentExecutorService.Tests
 
         private static List<string> CheckAndGetResults(ConcurrentDictionary<string, string> orders, ConcurrentDictionary<string, bool> baskets)
         {
-            List<string> expected = new List<string>();
+            var expected = new List<string>();
             orders.ForEach(o => { expected.Add(o.Value); });
 
             Assert.All(baskets, b => { Assert.Equal(1, orders.Count(o => o.Value == b.Key)); });
@@ -97,10 +92,10 @@ namespace ConcurrentExecutorService.Tests
             Func<string, Task<bool>> buyOperation = async (o) =>
             {
                 //server overloaded
-                await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(1, 200)));
+                await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(1, 20)));
                 var canBuy = baskets[o];
                 //business processing
-                await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(1, 200)));
+                await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(1, 20)));
                 if (!canBuy) return true;
                 baskets[o] = false;
                 orders[Guid.NewGuid().ToString()] = o;
