@@ -46,9 +46,13 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ArbitraryNameOperationIdObject.cs" />
-    <Compile Include="NameOperationIdObject.cs" />
+    <Compile Include="TestSystem\DelayedPurchaseServiceFactory.cs" />
+    <Compile Include="TestSystem\IPurchaseServiceFactory.cs" />
+    <Compile Include="TestSystem\NameOperationIdObject.cs" />
+    <Compile Include="TestSystem\NoDelayPurchaseServiceFactory.cs" />
+    <Compile Include="TestSystem\NullPurchaseServiceFactory.cs" />
     <Compile Include="TestHelper.cs" />
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="when_concurrent_service_is_used.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

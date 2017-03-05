@@ -31,7 +31,7 @@ namespace ConcurrentExecutorServiceLib
         private IActorRef ReceptionActorRef { get; }
 
 
-        public async Task<TResult> GoAsync<TResult>(Func<Task<object>> operation, string id) where TResult : class
+        public async Task<TResult> ExecuteAsync<TResult>(Func<Task<object>> operation, string id) where TResult : class
         {
             var result =
                 await
