@@ -24,31 +24,43 @@ namespace ConcurrentExecutorService.Tests
         [Fact]
         public void it_should_run_multiple_operations()
         {
+            //Arrange
             var baskets = new ConcurrentDictionary<string, bool>();
             var orders = new ConcurrentDictionary<string, string>();
 
             const int numberOfBaskets = 10;
-
-            CreateBaskets(numberOfBaskets, baskets);
-
+            const int numberOfPurchaseFromOneBasketCount = 10;
             var buyOperation = GetPurchaseService(baskets, orders);
 
-            const int multipleBuyFromOneBasketCount = 10;
 
-            var basketIds = PurchaseSequencially(baskets, multipleBuyFromOneBasketCount, buyOperation);
 
+            //Act - obtain expected result
+            var basketIds =   CreateBaskets(numberOfBaskets, numberOfPurchaseFromOneBasketCount, baskets);
+            PurchaseSequencially(basketIds, numberOfPurchaseFromOneBasketCount, buyOperation);
             var expected = CheckAndGetResults(orders, baskets);
 
+
+            //undo
             ResetStorages(baskets, orders);
 
+
+            //Act - tryout parallel purchase
+            basketIds = CreateBaskets(numberOfBaskets, numberOfPurchaseFromOneBasketCount, baskets);
+            PurchaseInParallel(basketIds, buyOperation);
+            var actual = CheckAndGetResults(orders, baskets);
+
+
+            //Assert
+            Assert.Equal(expected, actual);
+        }
+
+        private static void PurchaseInParallel(List<string> basketIds, Func<string, Task<bool>> buyOperation)
+        {
             var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService();
             Parallel.ForEach(basketIds, (basket) =>
             {
                 var result = service.GoAsync(basket, buyOperation, basket).Result;
             });
-
-            var actual = CheckAndGetResults(orders, baskets);
-            Assert.Equal(expected, actual);
         }
 
         private static List<string> CheckAndGetResults(ConcurrentDictionary<string, string> orders, ConcurrentDictionary<string, bool> baskets)
@@ -60,18 +72,23 @@ namespace ConcurrentExecutorService.Tests
             return expected;
         }
 
-        private static List<string> PurchaseSequencially(ConcurrentDictionary<string, bool> baskets, int multipleBuyFromOneBasketCount,
+        private static void PurchaseSequencially(List<string> basketIds, int multipleBuyFromOneBasketCount,
             Func<string, Task<bool>> buyOperation)
         {
-            var basketIds = new List<string>();
-            foreach (var keyValuePair in baskets)
-                for (var i = 0; i < multipleBuyFromOneBasketCount; i++)
-                    basketIds.Add(keyValuePair.Key);
-
+           
             basketIds.ForEach(basket =>
             {
                 var result = buyOperation(basket).Result;
             });
+           
+        }
+
+        private static List<string> ObtainBasketIds(ConcurrentDictionary<string, bool> baskets, int numberOfPurchaseFromOneBasketCount)
+        {
+            var basketIds = new List<string>();
+            foreach (var keyValuePair in baskets)
+                for (var i = 0; i < numberOfPurchaseFromOneBasketCount; i++)
+                    basketIds.Add(keyValuePair.Key);
             return basketIds;
         }
 
@@ -92,10 +109,13 @@ namespace ConcurrentExecutorService.Tests
             return buyOperation;
         }
 
-        private static void CreateBaskets(int numberOfBaskets, ConcurrentDictionary<string, bool> baskets)
+        private static List<string> CreateBaskets(int numberOfBaskets,int numberOfPurchaseFromOneBasketCount, ConcurrentDictionary<string, bool> baskets)
         {
             for (var i = 0; i < numberOfBaskets; i++)
                 baskets[Guid.NewGuid().ToString()] = true;
+
+          return  ObtainBasketIds(baskets, numberOfPurchaseFromOneBasketCount);
+
         }
 
         private static void ResetStorages(ConcurrentDictionary<string, bool> Baskets, ConcurrentDictionary<string, string> Orders)
