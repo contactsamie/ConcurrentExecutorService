@@ -5,27 +5,44 @@ using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
 using ConcurrentExecutorService.ActorSystemFactory;
+using ConcurrentExecutorService.Common;
+using ConcurrentExecutorService.Messages;
+using ConcurrentExecutorService.Reception;
 
 namespace ConcurrentExecutorServiceLib
 {
     public class ConcurrentExecutorService
     {
         private ActorSystemCreator ActorSystemCreator { set; get; }
+        private TimeSpan MaxExecutionTimePerAskCall { set; get; }
 
-        public ConcurrentExecutorService(string serverActorSystemName = null, ActorSystem actorSystem = null, string actorSystemConfig = null)
+        public ConcurrentExecutorService(TimeSpan maxExecutionTimePerAskCall  ,string serverActorSystemName = null, ActorSystem actorSystem = null, string actorSystemConfig = null)
         {
             ActorSystemCreator=new ActorSystemCreator();
+
+            if (string.IsNullOrEmpty(serverActorSystemName) && actorSystem == null)
+            {
+                serverActorSystemName = Guid.NewGuid().ToString();
+            }
+
             ActorSystemCreator.CreateOrSetUpActorSystem( serverActorSystemName ,  actorSystem ,  actorSystemConfig );
-          //  ActorSystemCreator.ServiceActorSystem
+            ReceptionActorRef= ActorSystemCreator.ServiceActorSystem.ActorOf(Props.Create(() => new ReceptionActor()));
+            MaxExecutionTimePerAskCall = maxExecutionTimePerAskCall;
         }
 
-        public async Task<TResult> GoAsync<TCommand, TResult, TIdentity>(TCommand command, Func<TCommand, TResult> operation, TIdentity id)
+        private IActorRef ReceptionActorRef { get; set; }
+
+        public async Task<TResult> GoAsync< TResult>(Func< TResult> operation, string id) where TResult : class
         {
-            return await Task.FromResult(operation(command));
+          var result=await  ReceptionActorRef.Ask<IConcurrentExecutorResponseMessage>(new SetWorkMessage(id, new WorkFactory(operation)), MaxExecutionTimePerAskCall);
+
+             return  (result as SetWorkCompletedMessage)?.Result as TResult;
         }
-        public async Task<TResult> GoAsync<TCommand, TResult,TIdentity>(TCommand command,Func<TCommand,Task<TResult>> operation, TIdentity id)
+        public async Task<TResult> GoAsync< TResult>(Func<Task<TResult>> operation, string id) where TResult : class
         {
-            return await operation(command);
+            var result = await ReceptionActorRef.Ask<IConcurrentExecutorResponseMessage>(new SetWorkMessage(id, new WorkFactory(operation)), MaxExecutionTimePerAskCall);
+
+            return  (result as SetWorkCompletedMessage)?.Result as TResult;
         }
     }
 }

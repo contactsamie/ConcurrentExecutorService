@@ -1,40 +1,46 @@
-﻿using System;
+﻿using Akka.Util.Internal;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Akka.Util.Internal;
 using Xunit;
 
 namespace ConcurrentExecutorService.Tests
 {
     public class TestHelper
     {
-        public static long TestOperationExecution(int numberOfBaskets, int numberOfPurchaseFromOneBasketCount)
+        public static long TestOperationExecution(int numberOfBaskets, int numberOfPurchaseFromOneBasketCount, TimeSpan maxExecutionTimePerAskCall)
         {
             //Arrange
             var baskets = new ConcurrentDictionary<string, bool>();
             var orders = new ConcurrentDictionary<string, string>();
 
-            var buyOperation = GetAsyncPurchaseService(baskets, orders);
-
             //Act - obtain expected result
             var basketIds = CreateBaskets(numberOfBaskets, numberOfPurchaseFromOneBasketCount, baskets);
-            PurchaseSequencially(basketIds,  buyOperation);
+            var purchaseService = new DelayedPurchaseServiceFactory(baskets, orders);
+            basketIds.ForEach(basket =>
+            {
+                var result = purchaseService.RunPurchaseService(basket).Result;
+            });
+
             var expected = GetOperationsResults(baskets);
             Assert.All(baskets, b => Assert.Equal(1, orders.Count(o => o.Value == b.Key)));
 
             //undo
             baskets.ForEach(b => { baskets[b.Key] = true; });
             orders = new ConcurrentDictionary<string, string>();
-            buyOperation = GetAsyncPurchaseService(baskets, orders);
 
-            var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService();
+            var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService(maxExecutionTimePerAskCall);
 
             var watch = System.Diagnostics.Stopwatch.StartNew();
-            Parallel.ForEach(basketIds, (basket) =>
+             purchaseService = new DelayedPurchaseServiceFactory(baskets, orders);
+            Parallel.ForEach(basketIds, (basketId) =>
             {
-                var result = service.GoAsync(basket, buyOperation, basket).Result;
+                var result = service.GoAsync(async () =>
+                {
+                    await purchaseService.RunPurchaseService(basketId);
+                }, basketId).Result;
             });
             watch.Stop();
             var elapsedMs = watch.ElapsedMilliseconds;
@@ -55,15 +61,6 @@ namespace ConcurrentExecutorService.Tests
             return expected;
         }
 
-        private static void PurchaseSequencially(List<string> basketIds,
-            Func<string, Task<bool>> buyOperation)
-        {
-            basketIds.ForEach(basket =>
-            {
-                var result = buyOperation(basket).Result;
-            });
-        }
-
         private static List<string> ObtainBasketIds(ConcurrentDictionary<string, bool> baskets, int numberOfPurchaseFromOneBasketCount)
         {
             var basketIds = new List<string>();
@@ -73,30 +70,75 @@ namespace ConcurrentExecutorService.Tests
             return basketIds;
         }
 
-        private static Func<string, Task<bool>> GetAsyncPurchaseService(ConcurrentDictionary<string, bool> baskets, ConcurrentDictionary<string, string> orders)
-        {
-            Func<string, Task<bool>> buyOperation = async (o) =>
-            {
-                var canBuy = baskets[o];
-                if (canBuy)
-                {
-                    //server overloaded
-                    await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(1, 2)));
-                    baskets[o] = false;
-                    orders[Guid.NewGuid().ToString()] = o;
-                }
-
-                return true;
-            };
-            return buyOperation;
-        }
-
         private static List<string> CreateBaskets(int numberOfBaskets, int numberOfPurchaseFromOneBasketCount, ConcurrentDictionary<string, bool> baskets)
         {
             for (var i = 0; i < numberOfBaskets; i++)
                 baskets[Guid.NewGuid().ToString()] = true;
 
             return ObtainBasketIds(baskets, numberOfPurchaseFromOneBasketCount);
+        }
+    }
+
+    public interface IPurchaseServiceFactory
+    {
+        Task<object> RunPurchaseService(string o);
+    }
+
+    public class DelayedPurchaseServiceFactory : IPurchaseServiceFactory
+    {
+        private ConcurrentDictionary<string, bool> Baskets { set; get; }
+        private ConcurrentDictionary<string, string> Orders { set; get; }
+
+        public DelayedPurchaseServiceFactory(ConcurrentDictionary<string, bool> baskets, ConcurrentDictionary<string, string> orders)
+        {
+            Orders = orders;
+            Baskets = baskets;
+        }
+
+        public async Task<object> RunPurchaseService(string o)
+        {
+            var canBuy = Baskets[o];
+            if (canBuy)
+            {
+                //server overloaded
+                await Task.Delay(TimeSpan.FromMilliseconds(new Random().Next(1, 2)));
+                Baskets[o] = false;
+                Orders[Guid.NewGuid().ToString()] = o;
+            }
+
+            return new object();
+        }
+    }
+
+    public class NoDelayPurchaseServiceFactory : IPurchaseServiceFactory
+    {
+        private ConcurrentDictionary<string, bool> Baskets { set; get; }
+        private ConcurrentDictionary<string, string> Orders { set; get; }
+
+        public NoDelayPurchaseServiceFactory(ConcurrentDictionary<string, bool> baskets, ConcurrentDictionary<string, string> orders)
+        {
+            Orders = orders;
+            Baskets = baskets;
+        }
+
+        public async Task<object> RunPurchaseService(string o)
+        {
+            var canBuy = Baskets[o];
+            if (canBuy)
+            {
+                Baskets[o] = false;
+                Orders[Guid.NewGuid().ToString()] = o;
+            }
+
+            return new object();
+        }
+    }
+
+    public class NullPurchaseServiceFactory : IPurchaseServiceFactory
+    {
+        public Task<object> RunPurchaseService(string o)
+        {
+            return Task.FromResult(new object());
         }
     }
 }
