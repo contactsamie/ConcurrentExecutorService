@@ -30,14 +30,21 @@ namespace ConcurrentExecutorServiceLib
 
         private IActorRef ReceptionActorRef { get; }
 
+        public async Task ExecuteAsync(Action operation, string id) 
+        {
+             await ExecuteAsync<object>(async () => {
+                operation();
+                return await Task.FromResult(new object());
+            }, id);
+        }
 
+        public async Task<TResult> ExecuteAsync<TResult>(Func<TResult> operation, string id) where TResult : class
+        {
+           return await ExecuteAsync<TResult>(async() => await Task.FromResult(operation()), id);
+        }
         public async Task<TResult> ExecuteAsync<TResult>(Func<Task<object>> operation, string id) where TResult : class
         {
-            var result =
-                await
-                    ReceptionActorRef.Ask<IConcurrentExecutorResponseMessage>(
-                        new SetWorkMessage(id, new WorkFactory(operation)), MaxExecutionTimePerAskCall)
-                        .ConfigureAwait(false);
+            var result = await ReceptionActorRef.Ask<IConcurrentExecutorResponseMessage>(new SetWorkMessage(id, new WorkFactory(operation)), MaxExecutionTimePerAskCall) .ConfigureAwait(false);
 
             return (result as SetWorkCompletedMessage)?.Result as TResult;
         }

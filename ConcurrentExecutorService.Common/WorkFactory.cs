@@ -12,6 +12,8 @@ namespace ConcurrentExecutorService.Common
             RunAsyncMethod = true;
         }
 
+       
+
         private Func<object> Operation { set; get; }
         private Func<Task<object>> OperationAsync { get; }
         //public WorkFactory(Func<object> operation )
