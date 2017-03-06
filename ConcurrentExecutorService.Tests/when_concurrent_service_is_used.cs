@@ -16,7 +16,7 @@ namespace ConcurrentExecutorService.Tests
             const int numberOfRequests = 2000;
             var maxExecutionTimePerAskCall = TimeSpan.FromSeconds(3);
             const int maxTotalExecutionTimeMs = 3000;
-            var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService(maxExecutionTimePerAskCall);
+            var service = new ConcurrentExecutorServiceLib2.ConcurrentExecutorService(maxExecutionTimePerAskCall);
             var watch = Stopwatch.StartNew();
             Parallel.ForEach(Enumerable.Range(0, numberOfRequests),
                 basket =>
@@ -37,7 +37,7 @@ namespace ConcurrentExecutorService.Tests
             const int numberOfBaskets = 100;
             const int numberOfPurchaseFromOneBasketCount = 1;
             var maxExecutionTimePerAskCall = TimeSpan.FromSeconds(5);
-            var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService(maxExecutionTimePerAskCall);
+            var service = new ConcurrentExecutorServiceLib2.ConcurrentExecutorService(maxExecutionTimePerAskCall);
 
             var durationMs = TestHelper.TestOperationExecution(numberOfBaskets, numberOfPurchaseFromOneBasketCount,
                 (basketIds, purchaseService) =>
@@ -60,7 +60,7 @@ namespace ConcurrentExecutorService.Tests
             const int numberOfBaskets = 100;
             const int numberOfPurchaseFromOneBasketCount = 10;
             var maxExecutionTimePerAskCall = TimeSpan.FromSeconds(5);
-            var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService(maxExecutionTimePerAskCall);
+            var service = new ConcurrentExecutorServiceLib2.ConcurrentExecutorService(maxExecutionTimePerAskCall);
 
             TestHelper.TestOperationExecution(numberOfBaskets, numberOfPurchaseFromOneBasketCount,
                 (basketIds, purchaseService) =>
@@ -82,7 +82,7 @@ namespace ConcurrentExecutorService.Tests
             const int numberOfBaskets = 100;
             const int numberOfPurchaseFromOneBasketCount = 10;
             var maxExecutionTimePerAskCall = TimeSpan.FromSeconds(5);
-            var service = new ConcurrentExecutorServiceLib.ConcurrentExecutorService(maxExecutionTimePerAskCall);
+            var service = new ConcurrentExecutorServiceLib2.ConcurrentExecutorService(maxExecutionTimePerAskCall);
 
             Assert.Throws<AllException>(() =>
             {

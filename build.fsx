@@ -21,7 +21,7 @@ let testDir   =root+ "/test"
 let deployDir = root+"/deploy/"
 let nugetWorkingDir =root+ "/packaging/"
 let allPackageFiles = [
-                        (buildDir+"ConcurrentExecutorServiceLib.dll");
+                        (buildDir+"ConcurrentExecutorServiceLib2.dll");
                         (buildDir+"ConcurrentExecutorService.Common.dll");
                         (buildDir+"ConcurrentExecutorService.Messages.dll");
                         (buildDir+"ConcurrentExecutorService.Reception.dll");
@@ -64,10 +64,7 @@ let NugetDeployPath= match nugetDeployPath with
                            | _         -> "-"+buildParam
 
 // version info
-let version =
-  match buildServer with
-  | TeamCity -> (buildVersion+BuildVersionType)
-  | _        -> ("0.0.92"+BuildVersionType)
+let version = sprintf "0.1.%s" buildVersion
 
 // Targets
 Target "Clean" (fun _ -> 

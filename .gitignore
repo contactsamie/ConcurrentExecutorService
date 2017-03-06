@@ -235,9 +235,5 @@ _Pvt_Extensions
 GeneratedArtifacts/
 ModelManifest.xml
 
-# Paket dependency manager
-.paket/paket.exe
-
 # FAKE - F# Make
 .fake/
-.paket/paket.exe

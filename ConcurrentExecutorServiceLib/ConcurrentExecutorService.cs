@@ -6,7 +6,7 @@ using ConcurrentExecutorService.Common;
 using ConcurrentExecutorService.Messages;
 using ConcurrentExecutorService.Reception;
 
-namespace ConcurrentExecutorServiceLib
+namespace ConcurrentExecutorServiceLib2
 {
     public class ConcurrentExecutorService
     {
