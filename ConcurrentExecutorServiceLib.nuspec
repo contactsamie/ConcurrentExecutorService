@@ -17,7 +17,7 @@
     @references@
   </metadata>
   <files>
-    <file src="ConcurrentExecutorServiceLib2.dll" target="lib\net45" />
+    <file src="ConcurrentExecutorServiceLib.dll" target="lib\net45" />
     <file src="ConcurrentExecutorService.Common.dll" target="lib\net45" />
     <file src="ConcurrentExecutorService.Messages.dll" target="lib\net45" />
     <file src="ConcurrentExecutorService.Reception.dll" target="lib\net45" />

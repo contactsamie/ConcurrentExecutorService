@@ -1,21 +1,21 @@
-﻿using System;
+﻿using ConcurrentExecutorService.Messages;
+using System;
 using System.Threading.Tasks;
-using ConcurrentExecutorService.Messages;
 
 namespace ConcurrentExecutorService.Common
 {
     public class WorkFactory : IWorkFactory
     {
-        public WorkFactory(Func<Task<object>> operation)
+        public WorkFactory(Func<object,Task<object>> operation, Func<object, bool> hasFailed)
         {
             OperationAsync = operation;
             RunAsyncMethod = true;
+            HasFailed = hasFailed;
         }
 
-       
+        private Func<object> Operation { get; }
+        private Func<object, Task<object>> OperationAsync { get; }
 
-        private Func<object> Operation { set; get; }
-        private Func<Task<object>> OperationAsync { get; }
         //public WorkFactory(Func<object> operation )
         //{
         //    Operation = operation;
@@ -25,11 +25,18 @@ namespace ConcurrentExecutorService.Common
             return Operation();
         }
 
-        public Task<object> ExecuteAsync()
+        public Task<object> ExecuteAsync(object command)
         {
-            return OperationAsync();
+            return OperationAsync(command);
+        }
+
+       
+        public bool IsAFailedResult(object result)
+        {
+            return (HasFailed != null && HasFailed(result));
         }
 
         public bool RunAsyncMethod { get; set; }
+        private Func<object, bool> HasFailed { get; }
     }
 }

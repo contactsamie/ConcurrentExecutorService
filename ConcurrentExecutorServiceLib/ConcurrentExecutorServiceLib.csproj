@@ -7,8 +7,8 @@
     <ProjectGuid>{FE89FE4C-9237-45BA-A2D1-19E6654EB6AB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ConcurrentExecutorServiceLib2</RootNamespace>
-    <AssemblyName>ConcurrentExecutorServiceLib2</AssemblyName>
+    <RootNamespace>ConcurrentExecutorServiceLib</RootNamespace>
+    <AssemblyName>ConcurrentExecutorServiceLib</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -28,6 +28,9 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

@@ -1,6 +1,6 @@
-﻿using System;
-using ConcurrentExecutorService.Tests.TestSystem;
+﻿using ConcurrentExecutorService.Tests.TestSystem;
 using FsCheck;
+using System;
 
 namespace ConcurrentExecutorService.Tests
 {
@@ -9,8 +9,8 @@ namespace ConcurrentExecutorService.Tests
         public static Arbitrary<NameOperationIdObject> Inventories()
         {
             var genInventories = from name in Arb.Generate<Guid>()
-                from operationId in Arb.Generate<uint>()
-                select new NameOperationIdObject(name.ToString(), operationId);
+                                 from operationId in Arb.Generate<uint>()
+                                 select new NameOperationIdObject(name.ToString(), operationId);
             return genInventories.ToArbitrary();
         }
     }
